@@ -1,0 +1,11 @@
+{
+  "name": "DARK SHOP",
+  "short_name": "DARK SHOP",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#080a12",
+  "theme_color": "#080a12",
+  "icons": [
+    {"src": "assets/logo.png", "sizes": "900x220", "type": "image/png"}
+  ]
+}
