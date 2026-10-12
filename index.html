@@ -1,6 +1,45 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
+<script>
+(function(){
+  // 1) Блокируем вставку netlify HUD через createElement
+  var origCreate = document.createElement.bind(document);
+  document.createElement = function(tag){
+    var el = origCreate(tag);
+    if (String(tag).toLowerCase() === 'script') {
+      var origSet = el.setAttribute.bind(el);
+      el.setAttribute = function(name, value){
+        if (name === 'src' && typeof value === 'string' && value.indexOf('/.netlify/scripts/') !== -1) {
+          // блокируем
+          return;
+        }
+        return origSet(name, value);
+      };
+      try {
+        Object.defineProperty(el, 'src', {
+          set: function(v){
+            if (typeof v === 'string' && v.indexOf('/.netlify/scripts/') !== -1) return;
+            origSet('src', v);
+          },
+          get: function(){ return el.getAttribute('src') || ''; }
+        });
+      } catch(e){}
+    }
+    return el;
+  };
+
+  // 2) На всякий — после загрузки чистим DOM и shadow hosts
+  function scrub(){
+    document.querySelectorAll('script[src*="/.netlify/scripts/"]').forEach(function(n){ n.remove(); });
+    document.querySelectorAll('netlify-hud, [data-netlify-hud], #netlify-hud').forEach(function(n){ n.remove(); });
+  }
+  document.addEventListener('DOMContentLoaded', scrub);
+  window.addEventListener('load', scrub);
+  setInterval(scrub, 800);
+})();
+</script>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#080a12">
@@ -354,17 +393,4 @@ footer{padding:32px 0 20px;border-top:1px solid var(--border)}
 
 </body>
 </html>
-
-<style>
-  #netlify-badge, .netlify-badge, a[href*="netlify.com"][target="_blank"]:not([data-keep]) { display:none !important; visibility:hidden !important; opacity:0 !important; pointer-events:none !important; }
-</style>
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-  const kill = () => {
-    document.querySelectorAll("a[href*=netlify.com], #netlify-badge, .netlify-badge, img[alt*=\"Netlify\" i]").forEach(el => el.remove());
-  };
-  kill();
-  setInterval(kill, 500);
-});
-</script>
 
